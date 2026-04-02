@@ -4,6 +4,7 @@
     "name": "sale-description-generator",
     // Or use a Dockerfile or Docker Compose file. More info: https://containers.dev/guide/dockerfile
     "image": "mcr.microsoft.com/devcontainers/base:noble",
+    "workspaceFolder": "/workspaces/sale-description-generator",
     "features": {
         "ghcr.io/devcontainers/features/go:1": {},
         "ghcr.io/nils-geistmann/devcontainers-features/zsh:0": {},
@@ -23,14 +24,9 @@
     // "remoteUser": "root"
     "runArgs": [
         "--security-opt",
-        "label=disable",
+        "label=disable"
     ],    
     "mounts": [
-        {
-            "source": "${localEnv:HOME}/.ssh",
-            "target": "/home/vscode/.ssh", // Adjust "vscode" to your container's non-root user (e.g., "node", "user")
-            "type": "bind",
-            "options": "readonly" // Optional: makes keys read-only in container
-        }
+        "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,readonly"
     ]
 }
