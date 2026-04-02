@@ -16,10 +16,18 @@ const bufSize = 1024 * 1024
 
 var lis *bufconn.Listener
 
+type mockGenerator struct{}
+
+func (m *mockGenerator) Generate(ctx context.Context, req *pb.GenerateDescriptionRequest) (string, error) {
+	return "Mock description for testing", nil
+}
+
 func init() {
 	lis = bufconn.Listen(bufSize)
 	s := grpc.NewServer()
-	pb.RegisterSaleDescriptionServiceServer(s, &Server{})
+	pb.RegisterSaleDescriptionServiceServer(s, &Server{
+		Generator: &mockGenerator{},
+	})
 	go func() {
 		if err := s.Serve(lis); err != nil {
 			log.Fatalf("Server exited with error: %v", err)
