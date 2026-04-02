@@ -20,3 +20,7 @@ This project is a gRPC-based API designed to generate high-quality, positive sal
 - Output descriptions must be approximately one long paragraph.
 - Descriptions should maintain a positive tone while being accurate to the provided grading.
 - Follow the industry standards for grading terminology.
+
+## Making changes
+
+New features should be pushed to a feature/xxx branch, whereas bug fixes are pushed to a fix/xxx branch. Always follow the /push-changes workflow when a task is completed.

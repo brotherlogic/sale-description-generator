@@ -1,11 +1,11 @@
 # Build stage
-FROM golang:1.24-alpine AS builder
+FROM golang:1.26-alpine AS builder
 
 # Set the Current Working Directory inside the container
 WORKDIR /app
 
 # Install git and other build dependencies
-RUN apk add --no-available --update --no-cache git ca-certificates tzdata && update-ca-certificates
+RUN apk add --update --no-cache git ca-certificates tzdata && update-ca-certificates
 
 # Copy go mod and sum files
 COPY go.mod go.sum ./
