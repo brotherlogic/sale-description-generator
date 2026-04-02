@@ -28,8 +28,8 @@ jobs:
       - name: Gemini Code Review
         uses: sshnaidm/gemini-code-review-action@v2
         with:
-          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          gemini-key: ${{ secrets.GEMINI_API_KEY }}
+          github-token: ${{ secrets.GITHUB_TOKEN }}
           model: 'gemini-1.5-flash'
           system_instruction: |
             You are a senior Go engineer reviewing a pull request for the "Sale Description Generator" project.
