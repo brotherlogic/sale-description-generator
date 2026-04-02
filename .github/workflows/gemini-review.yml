@@ -26,7 +26,7 @@ jobs:
           fi
 
       - name: Gemini Code Review
-        uses: sshnaidm/gemini-review-action@v0.1.13
+        uses: sshnaidm/gemini-code-review-action@v2
         with:
           gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
