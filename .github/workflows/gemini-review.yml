@@ -1,0 +1,44 @@
+name: Gemini PR Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Read GEMINI.md
+        id: gemini_context
+        run: |
+          if [ -f GEMINI.md ]; then
+            echo "context=$(cat GEMINI.md | tr '\n' ' ')" >> $GITHUB_OUTPUT
+          else
+            echo "context=" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Gemini Code Review
+        uses: sshnaidm/gemini-review-action@v0.1.13
+        with:
+          gemini_api_key: ${{ secrets.GEMINI_API_KEY }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          model: 'gemini-1.5-flash'
+          system_instruction: |
+            You are a senior Go engineer reviewing a pull request for the "Sale Description Generator" project.
+            Refer to the following project context for standards and rules:
+            ${{ steps.gemini_context.outputs.context }}
+            
+            Provide constructive feedback, focusing on:
+            1. Correctness and performance.
+            2. Adherence to gRPC and Go best practices.
+            3. Tone and accuracy of generated descriptions (if applicable).
+            
+            Keep your comments concise and helpful.
