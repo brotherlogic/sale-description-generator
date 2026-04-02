@@ -1,0 +1,32 @@
+# Ignore git directories
+.git
+.gitignore
+
+# Ignore local build files
+bin
+main
+
+# Ignore environment files
+.env
+*.env
+
+# Ignore temporary files
+tmp
+/tmp
+
+# Ignore testing and coverage files
+*.test
+coverage.out
+
+# Ignore markdown documentation not needed for build
+*.md
+docs/
+
+# Ignore development tools configuration
+.vscode
+.idea
+.gemini
+.agent
+.agents
+_agent
+_agents
