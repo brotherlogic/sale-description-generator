@@ -30,7 +30,7 @@ jobs:
         with:
           gemini-key: ${{ secrets.GEMINI_API_KEY }}
           github-token: ${{ secrets.GITHUB_TOKEN }}
-          model: 'gemini-3.1-pro'
+          model: 'gemini-2.5-flash'
           system_instruction: |
             You are a senior Go engineer reviewing a pull request for the "Sale Description Generator" project.
             Refer to the following project context for standards and rules:
