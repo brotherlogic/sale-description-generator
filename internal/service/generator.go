@@ -69,28 +69,29 @@ func (g *Generator) Generate(ctx context.Context, req *pb.GenerateDescriptionReq
 }
 
 func (g *Generator) constructPrompt(req *pb.GenerateDescriptionRequest) string {
-	return fmt.Sprintf(`You are an expert music record grader. Generate a concise, positive sale description for a vinyl record.
+	return fmt.Sprintf(`"Act as an expert record grader and Discogs seller. I am going to provide you with the Artist, Album Title, and Condition Notes for a vinyl record.
 
-### Instructions:
-1.  **Maximum of two sentences**.
-2.  Focus ONLY on the condition and user notes.
-3.  Include the artist and title if they fit naturally, but prioritize the condition.
-4.  Maintain a high-quality, professional tone.
+Please write a concise, professional listing description following these rules:
 
-### Examples of Good Descriptions:
-- One Owner, Played a few times with care.
-- Played maybe once or twice. Fantastic condition.
-- Still has the original hype sticker. The side of the cellophane was carefully cut to play the album once.
-- Never played, well kept copy sold in a carefully packaged bubble mailer.
+No Marketing Fluff: Do not explain why the album is 'classic' or 'influential.' The buyer already knows.
 
-### Current Record Details:
-- **Artist**: %s
-- **Title**: %s
-- **Media Condition**: %s
-- **Sleeve Condition**: %s
-- **User Notes**: %s
+Structure: Break the description into three clear sections: Media, Sleeve, and Overall.
 
-### Final Description:`,
+Technical Specifics: Use standard collector terminology (e.g., 'hairlines,' 'shelf wear,' 'seam splits,' 'surface noise').
+
+Tone: Professional, honest, and minimalist.
+
+Length: Keep the entire description under 80 words.
+
+Here are the details:
+
+Artist/Album: [Insert Name Here]
+
+Media Grade: [e.g., VG+]
+
+Sleeve Grade: [e.g., VG]
+
+Specific Defects/Notes: [e.g., minor corner ding, plays through perfectly, includes original insert]"`,
 		req.GetArtist(),
 		req.GetRecordTitle(),
 		req.GetMediaCondition().String(),
