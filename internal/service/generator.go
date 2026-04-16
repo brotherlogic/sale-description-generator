@@ -65,6 +65,11 @@ func (g *Generator) Generate(ctx context.Context, req *pb.GenerateDescriptionReq
 		}
 	}
 
+	// Append shipping information
+	if description != "" {
+		description = fmt.Sprintf("%s The record is packed outside the sleeve in a protective sleeve and a sturdy mailer.", description)
+	}
+
 	return description, nil
 }
 
@@ -72,7 +77,7 @@ func (g *Generator) constructPrompt(req *pb.GenerateDescriptionRequest) string {
 	return fmt.Sprintf(`You are an expert music record grader. Generate a concise, positive sale description for a vinyl record.
 
 ### Instructions:
-1.  **Maximum of two sentences**.
+1.  **Maximum of three sentences**.
 2.  Focus ONLY on the condition and user notes.
 3.  Include the artist and title if they fit naturally, but prioritize the condition.
 4.  Maintain a high-quality, professional tone.
