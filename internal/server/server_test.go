@@ -2,8 +2,9 @@ package server
 
 import (
 	"context"
-	"log"
+	"fmt"
 	"net"
+	"strings"
 	"testing"
 
 	pb "github.com/brotherlogic/sale-description-generator/api/gen/v1"
@@ -14,39 +15,55 @@ import (
 
 const bufSize = 1024 * 1024
 
-var lis *bufconn.Listener
-
-type mockGenerator struct{}
+type mockGenerator struct {
+	prefix string
+}
 
 func (m *mockGenerator) Generate(ctx context.Context, req *pb.GenerateDescriptionRequest) (string, error) {
-	return "Mock description for testing", nil
+	if m.prefix == "" {
+		return "Mock description for testing", nil
+	}
+	return fmt.Sprintf("%s: %s by %s", m.prefix, req.GetRecordTitle(), req.GetArtist()), nil
 }
 
-func init() {
-	lis = bufconn.Listen(bufSize)
+func setupTestServer(t *testing.T, srv *Server) pb.SaleDescriptionServiceClient {
+	lis := bufconn.Listen(bufSize)
 	s := grpc.NewServer()
-	pb.RegisterSaleDescriptionServiceServer(s, &Server{
-		Generator: &mockGenerator{},
-	})
+	pb.RegisterSaleDescriptionServiceServer(s, srv)
+
 	go func() {
-		if err := s.Serve(lis); err != nil {
-			log.Fatalf("Server exited with error: %v", err)
+		if err := s.Serve(lis); err != nil && err != grpc.ErrServerStopped {
+			t.Logf("Server exited: %v", err)
 		}
 	}()
-}
+	t.Cleanup(func() {
+		s.Stop()
+		lis.Close()
+	})
 
-func bufDialer(context.Context, string) (net.Conn, error) {
-	return lis.Dial()
-}
-
-func TestGenerateDescription(t *testing.T) {
-	ctx := context.Background()
-	conn, err := grpc.DialContext(ctx, "bufnet", grpc.WithContextDialer(bufDialer), grpc.WithTransportCredentials(insecure.NewCredentials()))
+	conn, err := grpc.DialContext(
+		context.Background(),
+		"bufnet",
+		grpc.WithContextDialer(func(context.Context, string) (net.Conn, error) {
+			return lis.Dial()
+		}),
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
 		t.Fatalf("Failed to dial bufnet: %v", err)
 	}
-	defer conn.Close()
-	client := pb.NewSaleDescriptionServiceClient(conn)
+	t.Cleanup(func() {
+		conn.Close()
+	})
+
+	return pb.NewSaleDescriptionServiceClient(conn)
+}
+
+func TestGenerateDescription_DefaultGenerator(t *testing.T) {
+	client := setupTestServer(t, &Server{
+		Generator:      &mockGenerator{prefix: "Gemini"},
+		LocalGenerator: &mockGenerator{prefix: "Local"},
+	})
 
 	req := &pb.GenerateDescriptionRequest{
 		RecordTitle:     "Wish You Were Here",
@@ -54,18 +71,58 @@ func TestGenerateDescription(t *testing.T) {
 		MediaCondition:  pb.Grading_GRADING_VERY_GOOD_PLUS,
 		SleeveCondition: pb.Grading_GRADING_NEAR_MINT,
 		UserNotes:       "Slight edge wear on sleeve",
+		UseLocalModel:   false,
 	}
 
-	resp, err := client.GenerateDescription(ctx, req)
+	resp, err := client.GenerateDescription(context.Background(), req)
 	if err != nil {
 		t.Fatalf("GenerateDescription failed: %v", err)
 	}
 
-	if resp.GetDescription() == "" {
-		t.Error("expected description to be non-empty")
+	if !strings.HasPrefix(resp.GetDescription(), "Gemini:") {
+		t.Errorf("expected Gemini generator to be used, got: %s", resp.GetDescription())
+	}
+}
+
+func TestGenerateDescription_LocalGenerator(t *testing.T) {
+	client := setupTestServer(t, &Server{
+		Generator:      &mockGenerator{prefix: "Gemini"},
+		LocalGenerator: &mockGenerator{prefix: "Local"},
+	})
+
+	req := &pb.GenerateDescriptionRequest{
+		RecordTitle:     "Wish You Were Here",
+		Artist:          "Pink Floyd",
+		MediaCondition:  pb.Grading_GRADING_VERY_GOOD_PLUS,
+		SleeveCondition: pb.Grading_GRADING_NEAR_MINT,
+		UserNotes:       "Slight edge wear on sleeve",
+		UseLocalModel:   true,
 	}
 
-	if len(resp.GetDescription()) < 10 {
-		t.Errorf("expected description to be reasonably long, got: %s", resp.GetDescription())
+	resp, err := client.GenerateDescription(context.Background(), req)
+	if err != nil {
+		t.Fatalf("GenerateDescription failed: %v", err)
+	}
+
+	if !strings.HasPrefix(resp.GetDescription(), "Local:") {
+		t.Errorf("expected Local generator to be used, got: %s", resp.GetDescription())
+	}
+}
+
+func TestGenerateDescription_UninitializedGenerators(t *testing.T) {
+	client := setupTestServer(t, &Server{})
+
+	_, err := client.GenerateDescription(context.Background(), &pb.GenerateDescriptionRequest{
+		UseLocalModel: false,
+	})
+	if err == nil || !strings.Contains(err.Error(), "generator not initialized") {
+		t.Errorf("expected 'generator not initialized' error, got: %v", err)
+	}
+
+	_, err = client.GenerateDescription(context.Background(), &pb.GenerateDescriptionRequest{
+		UseLocalModel: true,
+	})
+	if err == nil || !strings.Contains(err.Error(), "local generator not initialized") {
+		t.Errorf("expected 'local generator not initialized' error, got: %v", err)
 	}
 }
