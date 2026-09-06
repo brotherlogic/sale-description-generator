@@ -22,11 +22,26 @@
     // "customizations": {},
     // Uncomment to connect as root instead. More info: https://aka.ms/dev-containers-non-root.
     // "remoteUser": "root"
-    "runArgs": [
-        "--security-opt",
-        "label=disable"
-    ],    
-    "mounts": [
-        "source=${localEnv:HOME}/.ssh,target=/home/vscode/.ssh,type=bind,readonly"
-    ]
+    	"workspaceFolder": "/workspaces/sale-description-generator",
+	"workingDir": "/workspaces/sale-description-generator",
+	"initializeCommand": "echo \"GH_TOKEN=$(gh auth token)\" > .devcontainer/.env.auth",
+	"runArgs": [
+		"--security-opt",
+	    "label=disable",
+	    "--env-file",
+		"${localWorkspaceFolder}/.devcontainer/.env.auth"
+	],
+	"containerEnv": {
+		"GH_GIT_PROTOCOL": "ssh",
+		"TZ": "America/Los_Angeles"
+	},
+	"mounts": [
+		{
+			"source": "${localEnv:HOME}/.ssh",
+			"target": "/home/vscode/.ssh", 
+			"type": "bind",
+			"options": "readonly" 
+		},
+	    		"source=${localEnv:HOME}/.gemini,target=/home/vscode/.gemini,type=bind"
+	]
 }
