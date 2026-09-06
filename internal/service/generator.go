@@ -46,7 +46,7 @@ func (g *Generator) Close() {
 
 // Generate produces a sale description based on the request
 func (g *Generator) Generate(ctx context.Context, req *pb.GenerateDescriptionRequest) (string, error) {
-	prompt := g.constructPrompt(req)
+	prompt := ConstructPrompt(req)
 
 	resp, err := g.model.GenerateContent(ctx, genai.Text(prompt))
 	if err != nil {
@@ -65,41 +65,5 @@ func (g *Generator) Generate(ctx context.Context, req *pb.GenerateDescriptionReq
 		}
 	}
 
-	// Append shipping information
-	if description != "" {
-		description = fmt.Sprintf("%s The record is packed outside the sleeve in a protective sleeve and a sturdy mailer.", description)
-	}
-
-	return description, nil
-}
-
-func (g *Generator) constructPrompt(req *pb.GenerateDescriptionRequest) string {
-	return fmt.Sprintf(`You are an expert music record grader. Generate a concise, positive sale description for a vinyl record.
-
-### Instructions:
-1.  **Maximum of three sentences**.
-2.  Focus ONLY on the condition and user notes.
-3.  Include the artist and title if they fit naturally, but prioritize the condition.
-4.  Maintain a high-quality, professional tone.
-
-### Examples of Good Descriptions:
-- One Owner, Played a few times with care.
-- Played maybe once or twice. Fantastic condition.
-- Still has the original hype sticker. The side of the cellophane was carefully cut to play the album once.
-- Never played, well kept copy sold in a carefully packaged bubble mailer.
-
-### Current Record Details:
-- **Artist**: %s
-- **Title**: %s
-- **Media Condition**: %s
-- **Sleeve Condition**: %s
-- **User Notes**: %s
-
-### Final Description:`,
-		req.GetArtist(),
-		req.GetRecordTitle(),
-		req.GetMediaCondition().String(),
-		req.GetSleeveCondition().String(),
-		req.GetUserNotes(),
-	)
+	return appendShippingInfo(description), nil
 }

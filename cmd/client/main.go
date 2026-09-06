@@ -44,6 +44,7 @@ func main() {
 	media := flag.String("media", "VG+", "Media condition")
 	sleeve := flag.String("sleeve", "VG+", "Sleeve condition")
 	notes := flag.String("notes", "", "Additional user notes")
+	local := flag.Bool("local", false, "Use local Ollama model instead of Gemini")
 	flag.Parse()
 
 	if *title == "" || *artist == "" {
@@ -69,7 +70,7 @@ func main() {
 
 	client := pb.NewSaleDescriptionServiceClient(conn)
 
-	ctx, cancel := context.WithTimeout(context.Background(), time.Second*30)
+	ctx, cancel := context.WithTimeout(context.Background(), time.Second*60)
 	defer cancel()
 
 	resp, err := client.GenerateDescription(ctx, &pb.GenerateDescriptionRequest{
@@ -78,6 +79,7 @@ func main() {
 		MediaCondition:  mediaGrading,
 		SleeveCondition: sleeveGrading,
 		UserNotes:       *notes,
+		UseLocalModel:   *local,
 	})
 	if err != nil {
 		log.Fatalf("failed to generate description: %v", err)

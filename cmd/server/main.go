@@ -15,12 +15,18 @@ import (
 func main() {
 	ctx := context.Background()
 
-	// Initialize Generator
-	gen, err := service.NewGenerator(ctx)
+	// Initialize Gemini Generator
+	var gen *service.Generator
+	var err error
+	gen, err = service.NewGenerator(ctx)
 	if err != nil {
-		log.Fatalf("failed to initialize generator: %v", err)
+		log.Printf("Warning: failed to initialize Gemini generator: %v", err)
+	} else {
+		defer gen.Close()
 	}
-	defer gen.Close()
+
+	// Initialize Local Ollama Generator
+	localGen := service.NewLocalGenerator("", "")
 
 	lis, err := net.Listen("tcp", ":50051")
 	if err != nil {
@@ -29,7 +35,8 @@ func main() {
 
 	s := grpc.NewServer()
 	pb.RegisterSaleDescriptionServiceServer(s, &server.Server{
-		Generator: gen,
+		Generator:      gen,
+		LocalGenerator: localGen,
 	})
 
 	// Register reflection service on gRPC server
