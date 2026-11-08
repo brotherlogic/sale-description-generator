@@ -37,6 +37,22 @@ func parseGrading(s string) (pb.Grading, error) {
 	}
 }
 
+func parseFormat(s string) (pb.MediaFormat, error) {
+	s = strings.ToUpper(strings.ReplaceAll(strings.TrimSpace(s), " ", "_"))
+	switch s {
+	case "VINYL":
+		return pb.MediaFormat_MEDIA_FORMAT_VINYL, nil
+	case "CD":
+		return pb.MediaFormat_MEDIA_FORMAT_CD, nil
+	case "MIXED":
+		return pb.MediaFormat_MEDIA_FORMAT_MIXED, nil
+	case "UNSPECIFIED", "":
+		return pb.MediaFormat_MEDIA_FORMAT_UNSPECIFIED, nil
+	default:
+		return pb.MediaFormat_MEDIA_FORMAT_UNSPECIFIED, fmt.Errorf("unknown media format: %s", s)
+	}
+}
+
 func main() {
 	serverAddr := flag.String("server", "localhost:50051", "The server address and port")
 	title := flag.String("title", "", "Record title")
@@ -45,6 +61,7 @@ func main() {
 	sleeve := flag.String("sleeve", "VG+", "Sleeve condition")
 	notes := flag.String("notes", "", "Additional user notes")
 	local := flag.Bool("local", false, "Use local Ollama model instead of Gemini")
+	format := flag.String("format", "unspecified", "Media format (vinyl, cd, mixed, unspecified)")
 	flag.Parse()
 
 	if *title == "" || *artist == "" {
@@ -59,6 +76,11 @@ func main() {
 	sleeveGrading, err := parseGrading(*sleeve)
 	if err != nil {
 		log.Fatalf("invalid sleeve condition: %v", err)
+	}
+
+	mediaFormat, err := parseFormat(*format)
+	if err != nil {
+		log.Fatalf("invalid media format: %v", err)
 	}
 
 	// Connect to the server
@@ -80,6 +102,7 @@ func main() {
 		SleeveCondition: sleeveGrading,
 		UserNotes:       *notes,
 		UseLocalModel:   *local,
+		MediaFormat:     mediaFormat,
 	})
 	if err != nil {
 		log.Fatalf("failed to generate description: %v", err)
