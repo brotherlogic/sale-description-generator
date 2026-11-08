@@ -65,5 +65,5 @@ func (g *Generator) Generate(ctx context.Context, req *pb.GenerateDescriptionReq
 		}
 	}
 
-	return appendShippingInfo(description), nil
+	return appendShippingInfo(description, req.GetMediaFormat()), nil
 }

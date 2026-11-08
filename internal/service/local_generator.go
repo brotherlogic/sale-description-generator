@@ -129,5 +129,5 @@ func (l *LocalGenerator) Generate(ctx context.Context, req *pb.GenerateDescripti
 	}
 
 	description := strings.TrimSpace(chatResp.Choices[0].Message.Content)
-	return appendShippingInfo(description), nil
+	return appendShippingInfo(description, req.GetMediaFormat()), nil
 }
